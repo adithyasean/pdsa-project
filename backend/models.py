@@ -7,11 +7,20 @@ class NewRoundResponse(BaseModel):
     cost_matrix: list[list[int]]  # n x n, cost_matrix[employee][task]
 
 
+class AssignmentStep(BaseModel):
+    employee: int
+    task: int
+    cost: int
+    running_total: int
+    candidates: list[list[int]] = []   # [[task, cost], ...] top cheapest options considered
+
+
 class AlgorithmResult(BaseModel):
     algorithm_name: str
     assignment: list[int]          # assignment[employee] = task index
     total_cost: int
     time_ms: float
+    steps: list[AssignmentStep] = []   # step-by-step trace for animation
 
 
 class SolveRequest(BaseModel):

@@ -1,37 +1,110 @@
 .wrapper {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-  padding: 1.5rem 0;
+  gap: 1.25rem;
+  padding: 0.5rem 0;
+  animation: fadeSlide 0.4s ease;
 }
-.wrapper h2 { font-size: 1.4rem; color: #f1f5f9; }
+
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.titleRow h2 { font-size: 1.3rem; color: #f1f5f9; }
 
 .cards {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
-  justify-content: center;
 }
 
 .card {
   background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 12px;
+  border: 2px solid #334155;
+  border-radius: 14px;
   padding: 1.25rem 1.5rem;
-  min-width: 160px;
+  min-width: 170px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
+  transition: border-color 0.2s, transform 0.15s;
+  position: relative;
 }
 
 .user     { border-color: #a855f7; }
-.greedy   { border-color: #f59e0b; }
-.hungarian{ border-color: #3b82f6; }
+.greedy   { border-color: #d97706; }
+.hungarian{ border-color: #2563eb; }
 
-.label      { font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
-.cost       { font-size: 2rem; font-weight: 800; color: #f1f5f9; }
-.time       { font-size: 0.85rem; color: #64748b; }
-.complexity { font-size: 0.75rem; color: #475569; }
+.highlighted {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px #0004;
+}
+.winner {
+  box-shadow: 0 0 0 2px #22c55e40;
+}
+
+.algoIcon { font-size: 1.8rem; }
+.label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.cost {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  font-variant-numeric: tabular-nums;
+}
+.time       { font-size: 0.82rem; color: #64748b; }
+.complexity { font-size: 0.72rem; color: #475569; }
 .delta      { font-size: 0.8rem; color: #f59e0b; font-weight: 600; }
+
+.bestBadge {
+  position: absolute;
+  top: -0.6rem;
+  right: 0.75rem;
+  background: #14532d;
+  color: #86efac;
+  border: 1px solid #22c55e60;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.5rem;
+}
+.chosenBadge {
+  background: #1e3a5f;
+  color: #93c5fd;
+  border: 1px solid #2563eb60;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  padding: 0.1rem 0.5rem;
+  font-weight: 600;
+}
+
+/* Comparison row */
+.comparison {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 0.82rem;
+}
+.compLabel { color: #64748b; }
+.compValue { color: #f1f5f9; font-weight: 600; font-variant-numeric: tabular-nums; }
+.compPct   { color: #94a3b8; font-weight: 400; }
+.compSep   { color: #334155; margin: 0 0.25rem; }

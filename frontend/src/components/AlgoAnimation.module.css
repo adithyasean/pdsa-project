@@ -1,0 +1,215 @@
+.container {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  flex: 1;
+  min-width: 300px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+}
+.greedy   { background: #451a0340; color: #fbbf24; border: 1px solid #d9770640; }
+.hungarian{ background: #1e3a5f;   color: #60a5fa; border: 1px solid #2563eb40; }
+
+.complexity { font-size: 0.75rem; color: #475569; }
+
+/* Progress */
+.progressBar {
+  height: 5px;
+  background: #1e293b;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.progressFill {
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #3b82f6, #06b6d4);
+  transition: width 0.15s ease;
+}
+.progressLabel {
+  font-size: 0.72rem;
+  color: #475569;
+  text-align: right;
+  margin-top: -0.4rem;
+}
+
+/* Running cost */
+.costDisplay {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.costLabel { font-size: 0.75rem; color: #64748b; }
+.costValue {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.2s;
+}
+
+/* Step description */
+.stepDesc {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #1e293b;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  min-height: 2.4rem;
+}
+.stepArrow { color: #3b82f6; font-size: 1rem; }
+.stepCost { color: #22c55e; }
+
+/* Candidates */
+.candidates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.candidatesLabel { font-size: 0.72rem; color: #475569; }
+.candidateList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.candidateChip {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  background: #1e293b;
+  color: #64748b;
+  border: 1px solid #334155;
+}
+.chosen {
+  background: #166534;
+  color: #bbf7d0;
+  border-color: #22c55e60;
+  font-weight: 700;
+}
+
+/* Mini matrix */
+.miniMatrixWrap {
+  overflow: auto;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+}
+.miniMatrix {
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  width: 100%;
+}
+.miniMatrix th, .miniMatrix td {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #1e293b;
+  text-align: center;
+}
+.corner {
+  background: #1e293b;
+  color: #475569;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+.rowHeader {
+  background: #1e293b;
+  color: #64748b;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+}
+.rowHighlight { background: #1e3a5f !important; color: #93c5fd !important; }
+
+.miniMatrix thead th {
+  background: #1e293b;
+  color: #64748b;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.colHighlight { color: #93c5fd !important; }
+
+.cell {
+  background: #0f172a;
+  color: #475569;
+  transition: background 0.15s, color 0.15s;
+}
+.cellActive {
+  background: #1d4ed8 !important;
+  color: #fff !important;
+  font-weight: 700;
+  animation: flash 0.3s ease;
+}
+.cellDone {
+  background: #14532d !important;
+  color: #86efac !important;
+}
+.cellRow {
+  background: #172554 !important;
+  color: #93c5fd !important;
+}
+.cellCandidate {
+  background: #292524 !important;
+  color: #fbbf24 !important;
+}
+
+@keyframes flash {
+  0%   { background: #60a5fa; }
+  50%  { background: #1d4ed8; }
+  100% { background: #1d4ed8; }
+}
+
+.matrixNote {
+  font-size: 0.68rem;
+  color: #334155;
+  text-align: center;
+  padding: 0.2rem;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.ctrlBtn { font-size: 0.85rem; padding: 0.35rem 0.85rem; }
+
+/* Final result */
+.finalResult {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  background: #14532d22;
+  border: 1px solid #22c55e40;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  animation: fadeIn 0.4s ease;
+}
+.finalLabel { font-size: 0.75rem; color: #64748b; }
+.finalCost  { font-size: 1.6rem; font-weight: 800; color: #22c55e; font-variant-numeric: tabular-nums; }
+.finalTime  { font-size: 0.8rem; color: #475569; margin-left: auto; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

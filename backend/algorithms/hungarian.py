@@ -16,7 +16,9 @@ Steps:
 """
 
 
-def hungarian_assignment(cost_matrix: list[list[int]]) -> tuple[list[int], int]:
+def hungarian_assignment(
+    cost_matrix: list[list[int]],
+) -> tuple[list[int], int, list[dict]]:
     """
     Find optimal minimum-cost assignment using the Hungarian algorithm.
 
@@ -31,6 +33,8 @@ def hungarian_assignment(cost_matrix: list[list[int]]) -> tuple[list[int], int]:
         assignment[employee] = task index assigned to that employee
     total_cost : int
         sum of costs for the final assignment
+    steps : list[dict]
+        Each step reveals one (employee, task) assignment in order.
     """
     n = len(cost_matrix)
     matrix = [row[:] for row in cost_matrix]
@@ -56,7 +60,25 @@ def hungarian_assignment(cost_matrix: list[list[int]]) -> tuple[list[int], int]:
 
     assignment = _extract_assignment(matrix, n)
     total_cost = sum(cost_matrix[emp][assignment[emp]] for emp in range(n))
-    return assignment, total_cost
+
+    # Build steps: reveal each assignment in employee order
+    running_total = 0
+    steps: list[dict] = []
+    for emp in range(n):
+        task = assignment[emp]
+        cost = cost_matrix[emp][task]
+        running_total += cost
+        steps.append(
+            {
+                "employee": emp,
+                "task": task,
+                "cost": cost,
+                "running_total": running_total,
+                "candidates": [],  # Hungarian doesn't expose intermediate candidates
+            }
+        )
+
+    return assignment, total_cost, steps
 
 
 # ---------------------------------------------------------------------------

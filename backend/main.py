@@ -72,19 +72,36 @@ def solve_round(body: SolveRequest):
         if free_employees:
             sub_matrix = [[matrix[i][j] for j in free_tasks] for i in free_employees]
             t0 = time.perf_counter()
-            sub_assignment, _ = algo_fn(sub_matrix)
+            sub_assignment, _, sub_steps = algo_fn(sub_matrix)
             elapsed_ms = (time.perf_counter() - t0) * 1000
 
             # Map sub-problem indices back to original
             full_assignment = list(partial)
             for idx, emp in enumerate(free_employees):
                 full_assignment[emp] = free_tasks[sub_assignment[idx]]
+
+            # Map steps back to original employee/task indices
+            user_cost = user_total_cost or 0
+            steps = []
+            for step in sub_steps:
+                real_emp  = free_employees[step["employee"]]
+                real_task = free_tasks[step["task"]]
+                steps.append({
+                    "employee": real_emp,
+                    "task": real_task,
+                    "cost": step["cost"],
+                    "running_total": user_cost + step["running_total"],
+                    "candidates": [
+                        [free_tasks[c[0]], c[1]] for c in step["candidates"]
+                    ],
+                })
         else:
             # Entire matrix already assigned by user — just time a trivial call
             t0 = time.perf_counter()
             algo_fn([[matrix[i][i] for i in range(1)]])   # minimal call to get a non-zero time
             elapsed_ms = (time.perf_counter() - t0) * 1000
             full_assignment = list(partial)
+            steps = []
 
         total_cost = sum(matrix[i][full_assignment[i]] for i in range(n))
         results.append(
@@ -93,6 +110,7 @@ def solve_round(body: SolveRequest):
                 assignment=full_assignment,
                 total_cost=total_cost,
                 time_ms=round(elapsed_ms, 4),
+                steps=steps,
             )
         )
 
