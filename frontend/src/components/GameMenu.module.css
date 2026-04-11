@@ -1,0 +1,62 @@
+.wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 3rem;
+}
+
+.logo {
+  text-align: center;
+}
+.logoIcon { font-size: 3rem; }
+.logo h1 { font-size: 2.5rem; font-weight: 800; color: #f1f5f9; margin-top: 0.5rem; }
+.logo p  { color: #64748b; margin-top: 0.25rem; }
+
+.menuGrid {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.menuCard {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 260px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+  position: relative;
+}
+.menuCard:hover:not(:disabled) {
+  border-color: #3b82f6;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(59,130,246,0.25);
+}
+.menuCard:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.menuIcon { font-size: 2.5rem; }
+.menuCard h2 { font-size: 1.25rem; margin: 0.75rem 0 0.5rem; color: #f1f5f9; }
+.menuCard p  { font-size: 0.85rem; color: #94a3b8; line-height: 1.5; }
+
+.badge {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #22c55e22;
+  color: #22c55e;
+  border: 1px solid #22c55e55;
+}
+.badgeLocked {
+  background: #64748b22;
+  color: #64748b;
+  border-color: #64748b55;
+}
