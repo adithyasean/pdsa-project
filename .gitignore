@@ -3,6 +3,7 @@
 __pycache__/
 *.pyc
 backend/game.db
+backend/.python-version
 
 # Node
 frontend/node_modules/
