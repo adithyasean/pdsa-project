@@ -26,6 +26,7 @@ class AlgorithmResult(BaseModel):
 class SolveRequest(BaseModel):
     n: int
     cost_matrix: list[list[int]]
+    player_name: Optional[str] = None
     partial_assignment: Optional[list[Optional[int]]] = Field(
         default=None,
         description="User's partial assignments. Index = employee, value = task or null if unassigned.",
@@ -42,6 +43,8 @@ class SolveResponse(BaseModel):
 class RoundHistoryItem(BaseModel):
     id: int
     n: int
+    player_name: Optional[str] = None
+    user_total_cost: Optional[int] = None
     created_at: str
     algorithm_name: str
     total_cost: int

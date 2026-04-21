@@ -71,6 +71,30 @@
   border-radius: 10px;
   padding: 0.65rem 1rem;
 }
+.playerNameWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.playerNameLabel {
+  font-size: 0.78rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+.playerNameInput {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #f1f5f9;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.6rem;
+  width: 160px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.playerNameInput:focus { border-color: #3b82f6; }
+.playerNameInput::placeholder { color: #475569; }
+
 .toolbarStats { display: flex; align-items: center; gap: 1rem; flex: 1; flex-wrap: wrap; }
 .statPill {
   display: flex;

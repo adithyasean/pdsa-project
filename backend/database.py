@@ -15,9 +15,11 @@ def init_db():
     cursor = conn.cursor()
     cursor.executescript("""
         CREATE TABLE IF NOT EXISTS game_rounds (
-            id        INTEGER PRIMARY KEY AUTOINCREMENT,
-            n         INTEGER NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            n               INTEGER NOT NULL,
+            player_name     TEXT,
+            user_total_cost INTEGER,
+            created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS algorithm_results (
@@ -28,15 +30,24 @@ def init_db():
             time_ms        REAL NOT NULL
         );
     """)
+    # Migrate existing databases that lack the new columns
+    for col, definition in [("player_name", "TEXT"), ("user_total_cost", "INTEGER")]:
+        try:
+            cursor.execute(f"ALTER TABLE game_rounds ADD COLUMN {col} {definition}")
+        except Exception:
+            pass
     conn.commit()
     conn.close()
 
 
-def save_round(n: int, results: list[dict]) -> int:
+def save_round(n: int, results: list[dict], player_name: str | None = None, user_total_cost: int | None = None) -> int:
     """Insert a game round and its algorithm results. Returns round id."""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO game_rounds (n) VALUES (?)", (n,))
+    cursor.execute(
+        "INSERT INTO game_rounds (n, player_name, user_total_cost) VALUES (?, ?, ?)",
+        (n, player_name, user_total_cost),
+    )
     round_id = cursor.lastrowid
     cursor.executemany(
         "INSERT INTO algorithm_results (round_id, algorithm_name, total_cost, time_ms) VALUES (?, ?, ?, ?)",
@@ -54,6 +65,8 @@ def get_all_rounds() -> list[dict]:
         SELECT
             gr.id,
             gr.n,
+            gr.player_name,
+            gr.user_total_cost,
             gr.created_at,
             ar.algorithm_name,
             ar.total_cost,

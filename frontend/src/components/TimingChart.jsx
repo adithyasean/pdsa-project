@@ -2,16 +2,10 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 
-/**
- * Props
- * -----
- * history : array of { id, n, algorithm_name, total_cost, time_ms }
- */
 export default function TimingChart({ history }) {
-  // Group rows by round id into { roundId, Greedy, Hungarian, n }
   const rounds = {};
   for (const row of history) {
-    if (!rounds[row.id]) rounds[row.id] = { round: row.id, n: row.n };
+    if (!rounds[row.id]) rounds[row.id] = { round: row.id, n: row.n, player: row.player_name || null };
     rounds[row.id][row.algorithm_name] = parseFloat(row.time_ms.toFixed(4));
   }
   const data = Object.values(rounds).slice(-20); // last 20 rounds
@@ -30,6 +24,10 @@ export default function TimingChart({ history }) {
           <Tooltip
             contentStyle={{ background: "#1e293b", border: "1px solid #334155" }}
             labelStyle={{ color: "#f1f5f9" }}
+            labelFormatter={(label, payload) => {
+              const entry = payload?.[0]?.payload;
+              return entry?.player ? `Round ${label} · ${entry.player}` : `Round ${label}`;
+            }}
             formatter={(v, name) => [`${v} ms`, name]}
           />
           <Legend wrapperStyle={{ color: "#94a3b8" }} />

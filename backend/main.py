@@ -1,5 +1,6 @@
 import random
 import time
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,7 +10,14 @@ from models import NewRoundResponse, SolveRequest, SolveResponse, AlgorithmResul
 from algorithms.greedy import greedy_assignment
 from algorithms.hungarian import hungarian_assignment
 
-app = FastAPI(title="Minimum Cost Assignment Game")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="Minimum Cost Assignment Game", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,11 +25,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-def startup():
-    init_db()
 
 
 # ---------------------------------------------------------------------------
@@ -117,6 +120,8 @@ def solve_round(body: SolveRequest):
     round_id = save_round(
         n,
         [{"algorithm_name": r.algorithm_name, "total_cost": r.total_cost, "time_ms": r.time_ms} for r in results],
+        player_name=body.player_name or None,
+        user_total_cost=user_total_cost,
     )
 
     return SolveResponse(
@@ -130,3 +135,8 @@ def solve_round(body: SolveRequest):
 @app.get("/api/rounds", response_model=list[RoundHistoryItem])
 def rounds_history():
     return get_all_rounds()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

@@ -24,6 +24,7 @@ export default function MinimumCost({ onBack }) {
   const [loading, setLoading]         = useState(false);
   const [error, setError]             = useState(null);
   const [showSteps, setShowSteps]     = useState(null); // "Greedy"|"Hungarian"|null — steps log
+  const [playerName, setPlayerName]   = useState("");
 
   const loadHistory = useCallback(async () => {
     try { setHistory(await fetchHistory()); } catch { /* silent */ }
@@ -110,7 +111,7 @@ export default function MinimumCost({ onBack }) {
 
     try {
       // Always solve from scratch — no partial_assignment
-      const result = await solveRound({ n: round.n, cost_matrix: round.cost_matrix });
+      const result = await solveRound({ n: round.n, cost_matrix: round.cost_matrix, player_name: playerName.trim() || null });
       const g = result.results.find((r) => r.algorithm_name === "Greedy");
       const h = result.results.find((r) => r.algorithm_name === "Hungarian");
       setGreedyResult(g);
@@ -196,6 +197,20 @@ export default function MinimumCost({ onBack }) {
         <>
           {/* ── Toolbar ── */}
           <div className={styles.toolbar}>
+            {/* Player name */}
+            <div className={styles.playerNameWrap}>
+              <label htmlFor="playerName" className={styles.playerNameLabel}>Player</label>
+              <input
+                id="playerName"
+                type="text"
+                className={styles.playerNameInput}
+                placeholder="Enter your name…"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                maxLength={50}
+              />
+            </div>
+
             {/* Left: user stats */}
             <div className={styles.toolbarStats}>
               <div className={styles.statPill}>
@@ -366,7 +381,7 @@ export default function MinimumCost({ onBack }) {
                 {userTotal !== null && (
                   <div className={`${styles.compCard} ${styles.compUser}`}>
                     <span className={styles.compIcon}>🧠</span>
-                    <span className={styles.compLabel}>Your picks</span>
+                    <span className={styles.compLabel}>{playerName.trim() || "Your picks"}</span>
                     <span className={styles.compCost}>${userTotal.toLocaleString()}</span>
                     <span className={styles.compSub}>{userAssignedCount}/{round.n} assigned</span>
                   </div>
