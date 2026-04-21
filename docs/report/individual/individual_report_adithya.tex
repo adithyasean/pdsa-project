@@ -1,0 +1,674 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{xurl}
+\usepackage{graphicx}
+\usepackage{mathptmx}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{needspace}
+
+\geometry{left=1.5in, right=1in, top=1in, bottom=1in}
+\onehalfspacing
+
+\renewcommand{\thesection}{\arabic{section}}
+\titleformat{\section}{\fontsize{16pt}{19pt}\selectfont\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\fontsize{14pt}{17pt}\selectfont\bfseries}{\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}{\fontsize{12pt}{15pt}\selectfont\bfseries}{\thesubsubsection}{0.5em}{}
+
+% ---- Code listing style ----
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codegreen}{RGB}{40,120,40}
+\definecolor{codepurple}{RGB}{130,0,130}
+\definecolor{codeblue}{RGB}{0,0,180}
+\definecolor{codegray}{RGB}{120,120,120}
+
+\lstdefinestyle{pythonstyle}{
+    backgroundcolor=\color{codebg},
+    commentstyle=\itshape\color{codegreen},
+    keywordstyle=\bfseries\color{codeblue},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showstringspaces=false,
+    language=Python,
+    frame=single,
+    rulecolor=\color{codegray},
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+    numbersep=6pt,
+    xleftmargin=20pt,
+    framexleftmargin=20pt,
+    tabsize=4,
+}
+
+\lstdefinestyle{sqlstyle}{
+    backgroundcolor=\color{codebg},
+    keywordstyle=\bfseries\color{codeblue},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showstringspaces=false,
+    language=SQL,
+    frame=single,
+    rulecolor=\color{codegray},
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+    numbersep=6pt,
+    xleftmargin=20pt,
+    framexleftmargin=20pt,
+    tabsize=4,
+    morekeywords={AUTOINCREMENT,REFERENCES,REAL,DATETIME,DEFAULT},
+}
+
+\lstset{style=pythonstyle}
+
+% Placeholder box
+\newcommand{\placeholder}[1]{%
+    \vspace{0.5em}
+    \noindent\fbox{\parbox{\linewidth}{%
+        \centering\vspace{0.5em}
+        \textbf{[PLACEHOLDER]} \\ \vspace{0.3em}
+        \textit{#1}
+        \vspace{0.5em}
+    }}
+    \vspace{0.5em}
+}
+
+% =====================================================================
+\begin{document}
+% =====================================================================
+
+% ---- Cover Page ----
+\begin{titlepage}
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \raggedright
+        \includegraphics[width=4cm]{nibm-logo.png}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \raggedleft
+        \includegraphics[width=4.5cm]{coventry-logo.png}
+    \end{minipage}
+
+    \vspace{2cm}
+
+    {\fontsize{22pt}{26pt}\selectfont\bfseries BSc Hons in Computing \par}
+    {\fontsize{14pt}{17pt}\selectfont\bfseries 2024.2 \par}
+
+    \vspace{1.5cm}
+
+    {\fontsize{18pt}{22pt}\selectfont\bfseries
+    Problem Solving with Data Structures and Algorithms (PDSA) \par}
+
+    \vspace{0.5cm}
+
+    {\fontsize{12pt}{16pt}\selectfont
+    Individual Report: Minimum Cost Assignment Problem \\
+    Coursework 1 \par}
+
+    \vspace{3cm}
+
+    {\large
+    \begin{tabular}{lcl}
+        \textbf{Coventry Index}       & \textbf{:} & \textbf{16110762} \\
+        \textbf{NIBM Registered Name} & \textbf{:} & \textbf{E M A S B EKANAYAKA}
+    \end{tabular}
+    }
+
+    \vfill
+
+    {\bfseries Faculty of Engineering, Environment and Computing} \\
+    {\itshape School of Computing, Electronics and Mathematics} \\
+    {\bfseries Coventry University}
+
+    \vspace{0.8cm}
+
+    {\bfseries School of Computing and Engineering} \\
+    {\itshape National Institute of Business Management}
+
+    \vspace{0.5cm}
+\end{titlepage}
+
+\newpage
+\pagenumbering{roman}
+\cfoot{\thepage}
+
+\listoffigures
+\newpage
+
+\listoftables
+\newpage
+
+\tableofcontents
+\newpage
+
+\pagenumbering{arabic}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[R]{\thepage}
+
+% =====================================================================
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
+% =====================================================================
+
+This report presents an individual analysis of the Minimum Cost Assignment game
+implemented as part of the PDSA coursework. The application is a full-stack web
+game built with a Python FastAPI backend, a React frontend, and an SQLite database.
+
+The core problem is the \textbf{Assignment Problem}: given $N$ employees and $N$ tasks,
+where assigning employee $i$ to task $j$ incurs a cost $c_{ij}$, find a one-to-one
+assignment that minimises the total cost. In each game round, $N$ is chosen randomly
+in the range $[50, 100]$ and each cost $c_{ij}$ is drawn randomly from $[\$20, \$200]$.
+
+Two algorithms are implemented and compared: a \textbf{Greedy} heuristic and the
+\textbf{Hungarian algorithm} (Kuhn--Munkres method).
+
+% =====================================================================
+\clearpage
+\section{Program Logic}
+% =====================================================================
+
+\subsection{Game Round Generation}
+
+Each round begins when the frontend calls the \texttt{GET /api/round/new} endpoint.
+The backend uses Python's \texttt{random} module to produce a random problem instance:
+
+\needspace{7cm}
+\begin{lstlisting}[caption={Game round generation -- backend/main.py}]
+@app.get("/api/round/new", response_model=NewRoundResponse)
+def new_round():
+    n = random.randint(50, 100)
+    cost_matrix = [
+        [random.randint(20, 200) for _ in range(n)]
+        for _ in range(n)
+    ]
+    return NewRoundResponse(n=n, cost_matrix=cost_matrix)
+\end{lstlisting}
+
+\noindent
+The $N \times N$ cost matrix is sent to the frontend, which renders it as an
+interactive table. The player may optionally assign some tasks manually before
+requesting the algorithmic solutions.
+
+\subsection{Greedy Assignment Algorithm}
+
+The greedy approach scans employees in order $0, 1, \ldots, N-1$. For each employee
+it picks the \emph{cheapest unassigned task} and commits to that choice immediately.
+Because earlier decisions are never reconsidered, the greedy algorithm does not
+guarantee a globally optimal assignment; it serves as a fast baseline.
+
+\needspace{14cm}
+\begin{lstlisting}[caption={Greedy core loop -- backend/algorithms/greedy.py}]
+for employee in range(n):
+    best_task = -1
+    best_cost = float("inf")
+    candidates = []
+
+    for task in range(n):
+        if task not in assigned_tasks:
+            candidates.append((task, cost_matrix[employee][task]))
+            if cost_matrix[employee][task] < best_cost:
+                best_cost = cost_matrix[employee][task]
+                best_task = task
+
+    assignment[employee] = best_task
+    assigned_tasks.add(best_task)
+    running_total += int(best_cost)
+
+    steps.append({
+        "employee":      employee,
+        "task":          best_task,
+        "cost":          int(best_cost),
+        "running_total": running_total,
+        "candidates":    sorted(candidates, key=lambda x: x[1])[:5],
+    })
+
+total_cost = sum(cost_matrix[emp][assignment[emp]] for emp in range(n))
+return assignment, total_cost, steps
+\end{lstlisting}
+
+\noindent
+The function returns three values:
+\begin{itemize}
+    \item \texttt{assignment} -- a list where \texttt{assignment[i]} is the task
+          index allocated to employee $i$.
+    \item \texttt{total\_cost} -- the sum of all assignment costs in dollars.
+    \item \texttt{steps} -- a list of dictionaries (one per employee) that the
+          frontend uses to animate the decision process step by step.
+\end{itemize}
+
+\subsection{Hungarian Algorithm}
+
+The Hungarian algorithm (Kuhn--Munkres, 1955) is guaranteed to find the
+\emph{globally optimal} assignment. It operates on a reduced cost matrix and
+uses König's theorem to determine when an optimal assignment has been found.
+
+The algorithm proceeds through five logical phases that repeat until an optimal
+solution is identified:
+
+\needspace{8cm}
+\begin{enumerate}
+    \item \textbf{Row reduction.} Subtract the minimum value of each row from every
+          cell in that row, ensuring at least one zero per row.
+    \item \textbf{Column reduction.} Subtract the minimum value of each column from
+          every cell in that column, ensuring at least one zero per column.
+    \item \textbf{Minimum line cover.} Find the minimum number of horizontal or
+          vertical lines that cover all zeros. This is equivalent to computing a
+          maximum bipartite matching on the zero graph via augmenting paths
+          (König's theorem).
+    \item \textbf{Optimality check.} If the number of covering lines equals $N$,
+          a perfect assignment through zeros exists and is optimal.
+    \item \textbf{Matrix adjustment.} If the cover count is less than $N$, find the
+          minimum uncovered value $\delta$, subtract $\delta$ from all uncovered cells,
+          add $\delta$ to doubly-covered cells, and repeat from step 3.
+\end{enumerate}
+
+\needspace{12cm}
+\begin{lstlisting}[caption={Hungarian main body -- backend/algorithms/hungarian.py}]
+n = len(cost_matrix)
+matrix = [row[:] for row in cost_matrix]
+
+# Step 1 -- Row reduction
+for i in range(n):
+    row_min = min(matrix[i])
+    for j in range(n):
+        matrix[i][j] -= row_min
+
+# Step 2 -- Column reduction
+for j in range(n):
+    col_min = min(matrix[i][j] for i in range(n))
+    for i in range(n):
+        matrix[i][j] -= col_min
+
+# Iterate until minimum line cover equals n
+while True:
+    row_cover, col_cover = _min_line_cover(matrix, n)
+    if len(row_cover) + len(col_cover) >= n:
+        break
+    _adjust_matrix(matrix, n, row_cover, col_cover)
+
+assignment = _extract_assignment(matrix, n)
+total_cost = sum(cost_matrix[emp][assignment[emp]] for emp in range(n))
+\end{lstlisting}
+
+\noindent
+The helper \texttt{\_min\_line\_cover} finds the maximum matching on zero entries
+using an iterative depth-first search for augmenting paths, then applies König's
+theorem to derive the minimum line cover. Once the loop terminates,
+\texttt{\_extract\_assignment} reads the zero positions of the final reduced matrix
+to produce the bijective assignment.
+
+\subsection{Timing Measurement}
+
+Each algorithm is timed individually using Python's high-resolution
+\texttt{time.perf\_counter()} clock. Only the algorithm execution itself is measured,
+excluding network I/O, parsing, and database writes.
+
+\needspace{6cm}
+\begin{lstlisting}[caption={Timing capture -- backend/main.py}]
+for algo_name, algo_fn in [("Greedy", greedy_assignment),
+                            ("Hungarian", hungarian_assignment)]:
+    sub_matrix = [[matrix[i][j] for j in free_tasks]
+                  for i in free_employees]
+    t0 = time.perf_counter()
+    sub_assignment, _, sub_steps = algo_fn(sub_matrix)
+    elapsed_ms = (time.perf_counter() - t0) * 1000
+\end{lstlisting}
+
+\noindent
+The elapsed time is rounded to four decimal places and stored in the database as a
+\texttt{REAL} value in milliseconds.
+
+\subsection{Database Persistence}
+
+After both algorithms complete, results are stored in two normalised SQLite tables:
+
+\needspace{8cm}
+\begin{lstlisting}[style=sqlstyle, caption={Database schema -- backend/database.py}]
+CREATE TABLE IF NOT EXISTS game_rounds (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    n               INTEGER  NOT NULL,
+    player_name     TEXT,
+    user_total_cost INTEGER,
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS algorithm_results (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    round_id       INTEGER NOT NULL REFERENCES game_rounds(id),
+    algorithm_name TEXT    NOT NULL,
+    total_cost     INTEGER NOT NULL,
+    time_ms        REAL    NOT NULL
+);
+\end{lstlisting}
+
+\noindent
+Each round produces one row in \texttt{game\_rounds} and two rows in
+\texttt{algorithm\_results} (one per algorithm). The foreign key
+\texttt{round\_id} links timing records to their parent round.
+
+% =====================================================================
+\clearpage
+\section{Complexity Analysis}
+% =====================================================================
+
+\subsection{Greedy Algorithm -- $O(n^2)$ Time, $O(n)$ Space}
+
+\subsubsection{Time Complexity}
+
+The greedy algorithm contains two nested loops. The outer loop iterates over $n$
+employees and the inner loop scans all $n$ tasks to find the cheapest available
+option. No further passes are required:
+\[
+    T_{\text{Greedy}}(n) = O(n) \times O(n) = O(n^2)
+\]
+For $n = 100$ this amounts to at most $10{,}000$ comparisons, completing in
+microseconds on modern hardware.
+
+\subsubsection{Space Complexity}
+
+The only auxiliary structure is the \texttt{assigned\_tasks} set, which holds at
+most $n$ integers. The \texttt{steps} list adds $n$ small constant-size dictionaries.
+Both are $O(n)$, giving an overall space complexity of $O(n)$.
+
+\subsubsection{Optimality}
+
+The greedy algorithm is a \textbf{heuristic}. Committing to each decision without
+lookahead can miss the global optimum. For instance, selecting the cheapest task
+for employee 0 may force a more expensive assignment for employee 1. The unit test
+\texttt{test\_hungarian\_at\_least\_as\_good\_as\_greedy} (20 random matrices,
+seed 42) confirms empirically that the greedy cost is always greater than or equal
+to the Hungarian optimal.
+
+\subsection{Hungarian Algorithm -- $O(n^3)$ Time, $O(n^2)$ Space}
+
+\subsubsection{Time Complexity}
+
+\begin{itemize}
+    \item Row and column reduction: two passes over the $n \times n$ matrix -- $O(n^2)$.
+    \item Maximum matching via augmenting paths: iterative DFS over at most $n$
+          rows and $n$ columns per employee -- $O(n^2)$ per matching, $O(n^3)$
+          across all employees.
+    \item König's theorem propagation: BFS/DFS over the zero graph -- $O(n^2)$.
+    \item Matrix adjustment: one full pass over $n^2$ cells -- $O(n^2)$.
+    \item Number of iterations: each iteration increases the matching size by at
+          least one, so there are at most $n$ outer iterations.
+\end{itemize}
+
+The dominant term is $n$ iterations of an $O(n^2)$ matching:
+\[
+    T_{\text{Hungarian}}(n) = O(n^3)
+\]
+For $n = 100$ this is at most $1{,}000{,}000$ basic operations. Observed runtimes
+are typically in the range of a few milliseconds.
+
+\subsubsection{Space Complexity}
+
+The algorithm maintains a working copy of the $n \times n$ matrix throughout,
+giving $O(n^2)$ space. Auxiliary arrays for row/column matching and cover sets
+add $O(n)$ each, dominated by the matrix copy. Overall space complexity: $O(n^2)$.
+
+\subsubsection{Optimality}
+
+The Hungarian algorithm is \textbf{provably optimal}. The termination condition --
+a minimum line cover of size $n$, equivalent to a perfect matching on zeros of the
+reduced matrix -- guarantees that the extracted assignment achieves the minimum
+possible total cost.
+
+\subsection{Analysis Based on Program Outputs}
+
+Table \ref{tab:complexity} summarises the theoretical and observed properties of
+both algorithms as experienced during game play.
+
+\begin{table}[H]
+    \centering
+    \caption{Complexity summary from program logic and observed outputs}
+    \label{tab:complexity}
+    \begin{tabularx}{\linewidth}{lXX}
+        \toprule
+        \textbf{Property}          & \textbf{Greedy}      & \textbf{Hungarian}   \\
+        \midrule
+        Time complexity            & $O(n^2)$             & $O(n^3)$             \\
+        Space complexity           & $O(n)$               & $O(n^2)$             \\
+        Typical runtime ($n=100$)  & $< 0.5$\,ms          & $2$--$8$\,ms         \\
+        Optimality                 & Heuristic only       & Guaranteed optimal   \\
+        Cost vs.\ optimal          & Always $\geq$ optimal & Always optimal      \\
+        Growth with $n$            & Quadratic            & Cubic                \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+% =====================================================================
+\clearpage
+\section{Comparison of Algorithmic Approaches}
+% =====================================================================
+
+\subsection{Approach and Design Philosophy}
+
+The two algorithms represent contrasting design philosophies:
+
+\begin{itemize}
+    \item The \textbf{Greedy} algorithm applies the principle of \emph{local optimality}:
+          make the best available choice at each step without reconsidering prior
+          decisions. This leads to fast, simple code but sacrifices global optimality.
+    \item The \textbf{Hungarian} algorithm applies \emph{global optimisation} through
+          algebraic transformations (matrix reduction) and combinatorial reasoning
+          (König's theorem and maximum bipartite matching). It is slower but
+          always correct.
+\end{itemize}
+
+\subsection{Cost Quality}
+
+The unit test \texttt{test\_hungarian\_at\_least\_as\_good\_as\_greedy}, run over
+20 randomly generated matrices with $n \in [3, 15]$ using seed 42, confirms:
+\[
+    \text{cost}_{\text{Hungarian}} \leq \text{cost}_{\text{Greedy}} \quad
+    \text{for all tested instances}
+\]
+In practice the greedy solution is often 5--20\% more expensive than the optimum
+for random cost matrices. The gap tends to be larger when the matrix has few very
+low-cost cells, forcing greedy into costly early choices.
+
+\subsection{Runtime Performance}
+
+For the game's problem size ($n \in [50, 100]$) both algorithms are fast. Greedy
+completes in under 0.5\,ms while Hungarian typically takes 2--8\,ms. At larger
+scales the cubic growth of Hungarian becomes significant: scaling from $n = 100$
+to $n = 200$ increases Greedy's runtime by $4\times$ but Hungarian's by $8\times$.
+
+\subsection{Summary Comparison}
+
+\begin{table}[H]
+    \centering
+    \caption{Comparison of Greedy and Hungarian algorithms}
+    \label{tab:comparison}
+    \begin{tabularx}{\linewidth}{lXX}
+        \toprule
+        \textbf{Criterion}          & \textbf{Greedy}                     & \textbf{Hungarian}                   \\
+        \midrule
+        Time complexity             & $O(n^2)$                            & $O(n^3)$                             \\
+        Space complexity            & $O(n)$                              & $O(n^2)$                             \\
+        Optimality                  & No (heuristic)                      & Yes (provably optimal)               \\
+        Implementation complexity   & Simple (two nested loops)           & Complex (matching + König's theorem) \\
+        Scalability                 & Excellent for large $n$             & Suitable up to $n \approx 1{,}000$   \\
+        Predictability              & Constant number of passes           & Iterations vary per matrix           \\
+        Typical runtime at $n=100$  & $< 0.5$\,ms                         & $2$--$8$\,ms                         \\
+        Use case                    & Real-time scheduling, large $n$     & Exact optimisation, moderate $n$     \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsection{When to Prefer Each Algorithm}
+
+\begin{itemize}
+    \item \textbf{Prefer Greedy} when speed is critical and a near-optimal solution
+          is acceptable -- for example, in real-time systems, large-scale logistics,
+          or as a warm-start heuristic for more complex solvers.
+    \item \textbf{Prefer Hungarian} when the exact minimum cost is required and $n$
+          is not prohibitively large -- for example, in task scheduling, exam
+          timetabling, or any domain where a suboptimal assignment incurs a
+          measurable financial or operational penalty.
+\end{itemize}
+
+In the context of this game, the Hungarian result is presented as the optimal
+reference solution, while Greedy provides a fast comparison baseline that
+illustrates the cost of approximation.
+
+% =====================================================================
+\clearpage
+\section{Timing Chart -- Game Rounds}
+\label{sec:chart}
+% =====================================================================
+
+The chart in Figure~\ref{fig:timing} shows the execution time (in milliseconds)
+of each algorithm across the rounds played individually. Greedy times are drawn
+in amber and Hungarian times in blue. Data were retrieved from the
+\texttt{algorithm\_results} table in the SQLite database.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{algorithm-timing.png}
+    \caption{Algorithm timing across game rounds (Greedy vs.\ Hungarian).}
+    \label{fig:timing}
+\end{figure}
+
+\noindent
+\textbf{Observations from the chart:}
+\begin{itemize}
+    \item Greedy times are so small that the amber bars are barely visible on the
+          shared y-axis. Measured values are consistently below 1.5\,ms and often
+          under 0.5\,ms.
+    \item Hungarian times dominate the chart, typically ranging from 4 to 12\,ms
+          with an average around 8--9\,ms.
+    \item Hungarian is consistently 20--50 times slower than Greedy, which matches
+          the theoretical $O(n^3)$ vs.\ $O(n^2)$ difference.
+    \item Round~6 peaks at roughly 17\,ms for Hungarian -- the worst case in this
+          sample -- which reflects a cost matrix that required more iterations of
+          the minimum line cover loop.
+    \item Round~9 shows an unusually low Hungarian time (around 2\,ms), indicating
+          a matrix whose zeros happened to form a perfect matching early in the
+          reduction phase.
+    \item Rounds~1, 7, and~14 show negligible bars for both algorithms. These
+          correspond to rounds in which the player assigned all (or most) employees
+          manually, leaving only a tiny sub-matrix for the algorithms to solve.
+\end{itemize}
+
+% =====================================================================
+\clearpage
+\section{Video Demonstration}
+\label{sec:video}
+% =====================================================================
+
+The video clip demonstrates the complete game rounds played for this submission,
+showing the algorithm animation, step-by-step assignment, timing results, and
+database update for each round.
+
+\vspace{0.5em}
+\noindent
+\textbf{Video link:} \\
+\url{https://nibm-my.sharepoint.com/:f:/g/personal/cobsccomp242p-065_student_nibm_lk/IgC1z1sqJ0tgQ5aY-_paQP58ASlJvXpEXgEXOfWhQnmc9rQ?e=xGp5Ho}
+\vspace{0.5em}
+
+\noindent
+The video covers:
+\begin{itemize}
+    \item Starting a new round (random $N$ and cost matrix generation).
+    \item Running both algorithms and observing the animated step-by-step assignment.
+    \item Reviewing the comparison panel (cost, time, and gap analysis).
+    \item The timing chart updating after each round.
+    \item The database row created for each round.
+\end{itemize}
+
+% =====================================================================
+\clearpage
+\section{Database Output}
+\label{sec:db}
+% =====================================================================
+
+Figure~\ref{fig:db} shows the content of the \texttt{algorithm\_results} table,
+confirming that both algorithm names, total costs, and execution times are
+correctly persisted for every round.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{algorithm-results.png}
+    \caption{Rows of the \texttt{algorithm\_results} table produced during game play.}
+    \label{fig:db}
+\end{figure}
+
+\noindent
+\textbf{Observations from the database:}
+\begin{itemize}
+    \item Each round produces exactly two rows linked by \texttt{round\_id} --
+          one for Greedy and one for Hungarian -- giving 38 rows across 19 rounds.
+    \item \texttt{Hungarian.total\_cost} is always less than or equal to
+          \texttt{Greedy.total\_cost}, empirically confirming Hungarian's optimality.
+    \item The cost saving varies per round. Round~9 shows the largest gap
+          (Greedy \$2274 vs.\ Hungarian \$1539, a 32\% saving), while Round~6 shows
+          the smallest (Greedy \$3019 vs.\ Hungarian \$2761, an 8.5\% saving).
+    \item Rows for Rounds~1 and~7 show very small values (e.g., cost 9--10 for
+          Round~1, around 100 for Round~7). These correspond to rounds where the
+          player manually assigned most employees, leaving only a small sub-matrix
+          for the algorithm.
+    \item \texttt{time\_ms} is stored with four-decimal-place precision as a
+          \texttt{REAL} value, preserving sub-millisecond Greedy timings (e.g.,
+          0.0075\,ms, 0.2377\,ms).
+\end{itemize}
+
+\noindent
+Table \ref{tab:db-schema} describes the columns visible in the screenshot.
+
+\begin{table}[H]
+    \centering
+    \caption{Column descriptions for the \texttt{algorithm\_results} table}
+    \label{tab:db-schema}
+    \begin{tabularx}{\linewidth}{llX}
+        \toprule
+        \textbf{Column}          & \textbf{Type}    & \textbf{Description}                             \\
+        \midrule
+        \texttt{id}              & INTEGER          & Auto-incremented primary key                     \\
+        \texttt{round\_id}       & INTEGER (FK)     & Foreign key to \texttt{game\_rounds.id}          \\
+        \texttt{algorithm\_name} & TEXT             & ``Greedy'' or ``Hungarian''                      \\
+        \texttt{total\_cost}     & INTEGER          & Total assignment cost in dollars                 \\
+        \texttt{time\_ms}        & REAL             & Execution time in milliseconds (4 d.p.)          \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+% =====================================================================
+\clearpage
+\addcontentsline{toc}{section}{List of References}
+\section*{List of References}
+% =====================================================================
+
+\begin{enumerate}
+    \item Kuhn, H. W. (1955). The Hungarian method for the assignment problem.
+          \textit{Naval Research Logistics Quarterly}, 2(1--2), 83--97.
+    \item Munkres, J. (1957). Algorithms for the assignment and transportation
+          problems. \textit{Journal of the Society for Industrial and Applied
+          Mathematics}, 5(1), 32--38.
+    \item Cormen, T. H., Leiserson, C. E., Rivest, R. L., and Stein, C. (2009).
+          \textit{Introduction to Algorithms} (3rd ed.). MIT Press.
+    \item Konig, D. (1931). Graphen und Matrizen.
+          \textit{Matematikai Lapok}, 38, 116--119.
+\end{enumerate}
+
+\end{document}
