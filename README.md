@@ -54,12 +54,14 @@ pdsa-project/
 │       ├── App.jsx
 │       ├── api.js               # Backend fetch wrappers
 │       └── components/
-│           ├── GameMenu.jsx     # Landing screen
-│           ├── MinimumCost.jsx  # Main game screen
+│           ├── GameMenu.jsx      # Landing screen
+│           ├── MinimumCost.jsx   # Main game screen
+│           ├── AlgoAnimation.jsx # Step-by-step algorithm animation
 │           ├── ResultsDisplay.jsx
-│           └── TimingChart.jsx  # Recharts timing bar chart
+│           └── TimingChart.jsx   # Recharts timing bar chart
 └── docs/
-    └── COURSEWORK.md            # Assignment brief
+    ├── COURSEWORK.md             # Assignment brief
+    └── report/                   # Individual and group LaTeX reports
 ```
 
 ---
@@ -118,21 +120,25 @@ uv run pytest -v
 - **Manual** — assign all employees yourself using the matrix grid, then compare against algorithms
 - **Mixed** — make some assignments manually, then hand the remainder to an algorithm
 
+Players can optionally enter their name before solving; it is saved with the round along with their manual total cost. A step-by-step animation shows how each algorithm arrives at its assignment.
+
 ---
 
 ## Database Schema
 
 ```sql
 game_rounds (
-    id          INTEGER PRIMARY KEY,
-    n           INTEGER,
-    created_at  DATETIME
+    id              INTEGER PRIMARY KEY,
+    n               INTEGER,
+    player_name     TEXT,         -- optional player name
+    user_total_cost INTEGER,      -- cost of the player's manual assignment
+    created_at      DATETIME
 )
 
 algorithm_results (
     id             INTEGER PRIMARY KEY,
     round_id       INTEGER REFERENCES game_rounds(id),
-    algorithm_name TEXT,     -- "Greedy" or "Hungarian"
+    algorithm_name TEXT,          -- "Greedy" or "Hungarian"
     total_cost     INTEGER,
     time_ms        REAL
 )
