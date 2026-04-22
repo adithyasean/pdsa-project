@@ -1,0 +1,322 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{parskip}
+\usepackage[nostruts]{titlesec}
+\usepackage[colorlinks=true, linkcolor=black, citecolor=black, urlcolor=black, hypertexnames=false]{hyperref}
+\pdfstringdefDisableCommands{\def\texttt#1{#1}}
+\usepackage{xurl}
+\usepackage{graphicx}
+\usepackage{mathptmx}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{needspace}
+
+\geometry{left=1.5in, right=1in, top=1in, bottom=1in}
+\onehalfspacing
+
+\titleformat{\section}{\fontsize{16pt}{19pt}\selectfont\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\fontsize{14pt}{17pt}\selectfont\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\fontsize{12pt}{15pt}\selectfont\bfseries}{\thesubsubsection.}{0.5em}{}
+
+% ---- Code listing style ----
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codegreen}{RGB}{40,120,40}
+\definecolor{codepurple}{RGB}{130,0,130}
+\definecolor{codeblue}{RGB}{0,0,180}
+\definecolor{codegray}{RGB}{120,120,120}
+
+\lstdefinestyle{pythonstyle}{
+    backgroundcolor=\color{codebg},
+    commentstyle=\itshape\color{codegreen},
+    keywordstyle=\bfseries\color{codeblue},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showstringspaces=false,
+    language=Python,
+    frame=single,
+    rulecolor=\color{codegray},
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+    numbersep=6pt,
+    xleftmargin=20pt,
+    framexleftmargin=20pt,
+    tabsize=4,
+}
+
+\lstdefinestyle{sqlstyle}{
+    backgroundcolor=\color{codebg},
+    keywordstyle=\bfseries\color{codeblue},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showstringspaces=false,
+    language=SQL,
+    frame=single,
+    rulecolor=\color{codegray},
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+    numbersep=6pt,
+    xleftmargin=20pt,
+    framexleftmargin=20pt,
+    tabsize=4,
+    morekeywords={AUTOINCREMENT,REFERENCES,REAL,DATETIME,DEFAULT},
+}
+
+\lstset{style=pythonstyle}
+
+% Placeholder box
+\newcommand{\placeholder}[1]{%
+    \vspace{0.5em}
+    \noindent\fbox{\parbox{\linewidth}{%
+        \centering\vspace{0.5em}
+        \textbf{[PLACEHOLDER]} \\ \vspace{0.3em}
+        \textit{#1}
+        \vspace{0.5em}
+    }}
+    \vspace{0.5em}
+}
+
+% =====================================================================
+\begin{document}
+% =====================================================================
+
+% ---- Cover Page ----
+\begin{titlepage}
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \raggedright
+        \includegraphics[width=4cm]{nibm-logo.png}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \raggedleft
+        \includegraphics[width=4.5cm]{coventry-logo.png}
+    \end{minipage}
+
+    \vspace{2cm}
+
+    {\fontsize{22pt}{26pt}\selectfont\bfseries BSc Hons in Computing \par}
+    {\fontsize{14pt}{17pt}\selectfont\bfseries 2024.2 \par}
+
+    \vspace{1.5cm}
+
+    {\fontsize{18pt}{22pt}\selectfont\bfseries
+    Problem Solving with Data Structures and Algorithms (PDSA-II) \par}
+
+    \vspace{0.5cm}
+
+    {\fontsize{12pt}{16pt}\selectfont
+    Group Report: Minimum Cost Assignment Problem \\
+    Coursework 1 \par}
+
+    \vspace{3cm}
+
+    {\large
+    \noindent\begin{minipage}[t]{0.46\textwidth}
+        \raggedright
+        \small
+        \textbf{Leader Name:} E M A S B EKANAYAKA \\
+        \textbf{Cov. Index:} 16110762 \\
+        \textbf{NIBM Index:} COBSCCOMP242P-065
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.46\textwidth}
+        \raggedright
+        \small
+        \textbf{Member Name:} M D S Y RANARAJA \\
+        \textbf{Cov. Index:} 16116133 \\
+        \textbf{NIBM Index:} COBSCCOMP242P-075
+    \end{minipage}
+    }
+
+    \vfill
+
+    {\bfseries Faculty of Engineering, Environment and Computing} \\
+    {\itshape School of Computing, Electronics and Mathematics} \\
+    {\bfseries Coventry University}
+
+    \vspace{0.8cm}
+
+    {\bfseries School of Computing and Engineering} \\
+    {\itshape National Institute of Business Management}
+
+    \vspace{0.5cm}
+\end{titlepage}
+
+\newpage
+\pagenumbering{roman}
+\cfoot{\thepage}
+
+\listoffigures
+\newpage
+
+\listoftables
+\newpage
+
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section*{Contribution Table}
+\addcontentsline{toc}{section}{Contribution Table}
+% =====================================================================
+
+\begin{table}[H]
+    \centering
+    \caption{Group Contribution and Marks}
+    \begin{tabularx}{\textwidth}{|l|l|c|X|}
+        \hline
+        \textbf{Index} & \textbf{NIBM Index} & \textbf{Marks /10} & \textbf{Contribution} \\
+        \hline
+        16110762 & COBSCCOMP242P-065 & 10 & Backend -- algorithms, database, API, unit tests \\
+        \hline
+        16116133 & COBSCCOMP242P-075 & 10 & Frontend -- React UI, game screens, timing chart \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+\newpage
+
+\pagenumbering{arabic}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[R]{\thepage}
+
+% =====================================================================
+\section{Minimum Cost Problem}
+% =====================================================================
+
+% ---------------------------------------------------------------------
+\subsection{Functionality}
+% ---------------------------------------------------------------------
+
+\subsubsection{Code Segment: \texorpdfstring{$N$}{N} is changing randomly from 50 to 100 in each game round}
+In the FastAPI backend, the number of employees/tasks $N$ is selected randomly at the strt of each round between 50 and 100 using Python's \texttt{random.randint} function.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{n-changes-randomly.png}
+    \caption{Code segment where \texttt{N} is generated randomly between 50 and 100.}
+\end{figure}
+
+\subsubsection{Code Segment: Cost of assigning each task to each employee changing randomly from \$20 to \$200}
+After determining $N$, the application generates an $N \times N$ matrix to represent the costs. Each cordinate $c_{ij}$ is populated randomly via \texttt{random.randint(20, 200)}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{cost-matrix-values-change-randomly.png}
+    \caption{Code segment where each cost matrix value is generated randomly from \$20 to \$200.}
+\end{figure}
+
+\subsubsection{Code Segment: Record in the database how long it takes to find the minimum cost using each algorithm}
+The system executes both algorithms during the resllution phase and strictly measures the computing time using \texttt{time.perf\_counter()}. The elapsed \texttt{time\_ms} is then stored in the \texttt{algorithm\_results} SQLite table.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{record-time-taken-for-algorithms.png}
+    \caption{Code segment measuring and recording execution time for each algorithm.}
+\end{figure}
+
+\subsubsection{Code Segment: Two different appropriate algorithms}
+The application evaluates answers using two assignment algorithm techniques:
+\begin{enumerate}
+    \item \textbf{Greedy Approach}: A sub-optimal but fast $O(n^2)$ heuristic.
+    \item \textbf{Hungarian Algorithm (Kuhn-Munkres)}: An optimal $O(n^3)$ mathematical method that guarantes the absolute minimum total cost.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{greedy-algorithm-implementation.png}
+    \caption{Core implementation of the Greedy assignment algorithm.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{hungarian-algorithm-implementation.png}
+    \caption{Core implementation of the Hungarian algorithm.}
+\end{figure}
+
+\subsubsection{Code Segment: Save that person's name along with the correct response in the database}
+Players can optionally input their name when playing the Mixed or Manual mode. The system captures their user assigned cost alongside their name and links it to the algorithm results.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{save-player-name-to-the-database.png}
+    \caption{Code segment saving \texttt{player\_name} and related round data to the database.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{database-save-logic.png}
+    \caption{Backend database insertion logic used during round result persistence.}
+\end{figure}
+
+\subsubsection{Normalized DB Table Structure used for this Game Option}
+Two tables are utilised to store and map the gaming records effectively in a normalized fashion:
+\begin{itemize}
+    \item \texttt{game\_rounds}: Tracks the overarching session details including N, the player's name, their user cost, and timestamp.
+    \item \texttt{algorithm\_results}: Stores a row mapping per algorithm tested linked via a \texttt{round\_id} foreign key, containing properties like algorithm exactness (total cost) and efficiency (time taken).
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{database-schema-and-normalized-structure.png}
+    \caption{Normalized SQLite schema used for game rounds and algorithm results.}
+\end{figure}
+
+\vspace{15cm} 
+
+% ---------------------------------------------------------------------
+\subsection{UI}
+% ---------------------------------------------------------------------
+
+\subsubsection{UI screenshot when asking user to enter the inputs \& answers}
+The frontend built using React and Vite features intuitive prompts allowing users to decide if they wish to compute automaticaly, input answers manually through the matrix, and define their usernames.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{username-input.png}
+    \caption{Frontend prompt where the user can enter their name before solving a round.}
+\end{figure}
+
+\subsubsection{Validations and Exception Handling}
+Robust validation occurs both at the client and server levels:
+\begin{itemize}
+    \item \textbf{Frontend (React)}: Game input relies on deterministic UI flows preventing illogical inputs (e.g. assigning one employee to multiple tasks inadvertently triggers UI reassignment toggles instead of crashing). Missing configuration paths are guarded using standard component state checks.
+    \item \textbf{Backend (FastAPI)}: Pydantic models automatically validate incoming \path{POST /api/round/solve} requests. If incorrect data structures, mismatched $N$, or erroneous identifiers are pushed, FastAPI intercepts and returns 422 Unprocessable Entity responses. The database module utilises synchronous error catching avoiding data corruption from unique constraint or foreign key violations.
+\end{itemize}
+
+
+% ---------------------------------------------------------------------
+\subsection{Testing}
+% ---------------------------------------------------------------------
+
+\subsubsection{Code Segment: Unit Testing}
+We applied \texttt{pytest} for comprehensive automated validation. This contains isolated unit tests ensuring algorithm logic is strictly accurate. The testing checks for constraints such as verifying the Hungarian algorithm always finds a lower or equal total cost compared to the greedy heuristic.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{unit-test-greedy.png}
+    \caption{Unit tests validating greedy assignment behavior.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{unit-test-hungarian.png}
+    \caption{Unit tests validating Hungarian optimality and constraints.}
+\end{figure}
+
+\end{document}

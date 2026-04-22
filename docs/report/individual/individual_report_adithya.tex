@@ -6,7 +6,7 @@
 \usepackage{setspace}
 \usepackage{parskip}
 \usepackage{titlesec}
-\usepackage{hyperref}
+\usepackage[colorlinks=true, linkcolor=black, citecolor=black, urlcolor=black]{hyperref}
 \usepackage{xurl}
 \usepackage{graphicx}
 \usepackage{mathptmx}
@@ -114,7 +114,7 @@
     \vspace{1.5cm}
 
     {\fontsize{18pt}{22pt}\selectfont\bfseries
-    Problem Solving with Data Structures and Algorithms (PDSA) \par}
+    Problem Solving with Data Structures and Algorithms (PDSA-II) \par}
 
     \vspace{0.5cm}
 
@@ -127,6 +127,7 @@
     {\large
     \begin{tabular}{lcl}
         \textbf{Coventry Index}       & \textbf{:} & \textbf{16110762} \\
+        \textbf{NIBM Index}           & \textbf{:} & \textbf{COBSCCOMP242P-065} \\
         \textbf{NIBM Registered Name} & \textbf{:} & \textbf{E M A S B EKANAYAKA}
     \end{tabular}
     }
@@ -175,7 +176,7 @@ game built with a Python FastAPI backend, a React frontend, and an SQLite databa
 
 The core problem is the \textbf{Assignment Problem}: given $N$ employees and $N$ tasks,
 where assigning employee $i$ to task $j$ incurs a cost $c_{ij}$, find a one-to-one
-assignment that minimises the total cost. In each game round, $N$ is chosen randomly
+assignment that minimizes the total cost. In each game round, $N$ is chosen randomly
 in the range $[50, 100]$ and each cost $c_{ij}$ is drawn randomly from $[\$20, \$200]$.
 
 Two algorithms are implemented and compared: a \textbf{Greedy} heuristic and the
@@ -212,7 +213,7 @@ requesting the algorithmic solutions.
 
 The greedy approach scans employees in order $0, 1, \ldots, N-1$. For each employee
 it picks the \emph{cheapest unassigned task} and commits to that choice immediately.
-Because earlier decisions are never reconsidered, the greedy algorithm does not
+Because earlier decisions are never reconsidered, the gredy algorithm does not
 guarantee a globally optimal assignment; it serves as a fast baseline.
 
 \needspace{14cm}
@@ -520,11 +521,11 @@ to $n = 200$ increases Greedy's runtime by $4\times$ but Hungarian's by $8\times
 
 \begin{itemize}
     \item \textbf{Prefer Greedy} when speed is critical and a near-optimal solution
-          is acceptable -- for example, in real-time systems, large-scale logistics,
+          is acceptable; for example, in real-time systems, large-scale logistics,
           or as a warm-start heuristic for more complex solvers.
     \item \textbf{Prefer Hungarian} when the exact minimum cost is required and $n$
-          is not prohibitively large -- for example, in task scheduling, exam
-          timetabling, or any domain where a suboptimal assignment incurs a
+          is not prohibitively large; for example, in task scheduling, exam
+          timetabling, or any domain whre a suboptimal assignment incurs a
           measurable financial or operational penalty.
 \end{itemize}
 
@@ -553,15 +554,15 @@ in amber and Hungarian times in blue. Data were retrieved from the
 \noindent
 \textbf{Observations from the chart:}
 \begin{itemize}
-    \item Greedy times are so small that the amber bars are barely visible on the
+    \item Greedy times are small enough that the amber bars are barely visible on the
           shared y-axis. Measured values are consistently below 1.5\,ms and often
           under 0.5\,ms.
     \item Hungarian times dominate the chart, typically ranging from 4 to 12\,ms
           with an average around 8--9\,ms.
     \item Hungarian is consistently 20--50 times slower than Greedy, which matches
           the theoretical $O(n^3)$ vs.\ $O(n^2)$ difference.
-    \item Round~6 peaks at roughly 17\,ms for Hungarian -- the worst case in this
-          sample -- which reflects a cost matrix that required more iterations of
+    \item Round~6 peaks at roughly 17\,ms for Hungarian, the worst case in this
+          sample, which reflects a cost matrix that required more iterations of
           the minimum line cover loop.
     \item Round~9 shows an unusually low Hungarian time (around 2\,ms), indicating
           a matrix whose zeros happened to form a perfect matching early in the
@@ -585,10 +586,9 @@ database update for each round.
 \noindent
 \textbf{Video link:} \\
 \url{https://nibm-my.sharepoint.com/:f:/g/personal/cobsccomp242p-065_student_nibm_lk/IgC1z1sqJ0tgQ5aY-_paQP58ASlJvXpEXgEXOfWhQnmc9rQ?e=xGp5Ho}
-\vspace{0.5em}
 
 \noindent
-The video covers:
+The video covers the following aspects:
 \begin{itemize}
     \item Starting a new round (random $N$ and cost matrix generation).
     \item Running both algorithms and observing the animated step-by-step assignment.
@@ -617,8 +617,8 @@ correctly persisted for every round.
 \noindent
 \textbf{Observations from the database:}
 \begin{itemize}
-    \item Each round produces exactly two rows linked by \texttt{round\_id} --
-          one for Greedy and one for Hungarian -- giving 38 rows across 19 rounds.
+    \item Each round produces exactly two rows linked by \texttt{round\_id}:
+          one for Greedy and one for Hungarian, giving 38 rows across 19 rounds.
     \item \texttt{Hungarian.total\_cost} is always less than or equal to
           \texttt{Greedy.total\_cost}, empirically confirming Hungarian's optimality.
     \item The cost saving varies per round. Round~9 shows the largest gap
