@@ -28,98 +28,50 @@ export default function MinimumCost({ onBack }) {
   const [roundIds, setRoundIds]       = useState([]); // Track round IDs for game session
   const [roundCount, setRoundCount]   = useState(0); // Track number of rounds played
   const [showEndGameModal, setShowEndGameModal] = useState(false); // Show end-game modal
-  const [showStartModal, setShowStartModal] = useState(true); // Show start modal to ask for username
+  const [showStartModal, setShowStartModal] = useState(true); // Show start modal at beginning
   const [playerName, setPlayerName]   = useState(null); // Store player name for the session
+  const [sessionN, setSessionN]       = useState(null); // Task count chosen at start of session
 
   const loadHistory = useCallback(async () => {
     try { setHistory(await fetchHistory()); } catch { /* silent */ }
   }, []);
 
-  const handleStartGameSubmit = useCallback(async (name, customN) => {
-    setPlayerName(name);
+  const handleStartGameSubmit = (tasks) => {
+    setSessionN(tasks); // Remember the chosen task count for this session
+    loadNewPuzzle(tasks);
     setShowStartModal(false);
-    // Now load the first puzzle (with custom N if provided)
-    try {
-      let data = await fetchNewRound();
-      if (customN) {
-        data.n = customN;
-        data.cost_matrix = Array(customN)
-          .fill(null)
-          .map(() => Array(customN).fill(null).map(() => Math.floor(Math.random() * 180) + 20));
-      }
-      setRound(data);
-      setUserAssignment(Array(data.n).fill(null));
-    } catch (e) {
-      setError(e.message);
-    }
-    await loadHistory();
-  }, [loadHistory]);
+  };
 
-  const handleEndGameSubmit = useCallback(async (name) => {
-    // Update player name
+  const handleEndGameSubmit = async (name) => {
     setPlayerName(name);
-    // Update all rounds with the player name
-    if (roundIds.length > 0) {
-      try {
-        await updatePlayerName(roundIds, name);
-        await loadHistory();
-      } catch (e) {
-        setError(e.message);
-        return;
-      }
-    }
-    // Reset and go back to menu
-    setShowEndGameModal(false);
-    setRoundIds([]);
-    setRoundCount(0);
-    setShowStartModal(true); // Show start modal again for new game
-    onBack();
-  }, [roundIds, loadHistory, onBack]);
-
-  const handlePlayAgain = useCallback(async (name, customN) => {
-    // Update player name
-    setPlayerName(name);
-    // Update all rounds with the player name
-    if (roundIds.length > 0) {
-      try {
-        await updatePlayerName(roundIds, name);
-        await loadHistory();
-      } catch (e) {
-        setError(e.message);
-        return;
-      }
-    }
-    // Reset for new game
-    setShowEndGameModal(false);
-    setRoundIds([]);
-    setRoundCount(0);
-    // Reset and load a new puzzle
-    setRound(null);
-    setUserAssignment([]);
-    setGreedyResult(null);
-    setHungarianResult(null);
-    setAnimAlgo(null);
-    setAnimDone(false);
-    setViewMode(VIEW_USER);
-    setShowSteps(null);
-
-    // Load new puzzle (with custom N if provided)
     try {
-      let data = await fetchNewRound();
-      if (customN) {
-        data.n = customN;
-        data.cost_matrix = Array(customN)
-          .fill(null)
-          .map(() => Array(customN).fill(null).map(() => Math.floor(Math.random() * 180) + 20));
-      }
-      setRound(data);
-      setUserAssignment(Array(data.n).fill(null));
+      await updatePlayerName(roundIds, name);
+      // Success - reset session
+      setRoundIds([]);
+      setRoundCount(0);
+      setShowEndGameModal(false);
+      loadHistory();
+      onBack();
     } catch (e) {
-      setError(e.message);
+      alert("Failed to save session: " + e.message);
     }
-  }, [roundIds, loadHistory]);
+  };
 
-  const loadNewPuzzle = useCallback(async () => {
+  const handlePlayAgain = async (name) => {
+    setPlayerName(name);
+    try {
+      await updatePlayerName(roundIds, name);
+      setRoundIds([]);
+      setRoundCount(0);
+      setShowEndGameModal(false);
+      setShowStartModal(true); // Go back to start to pick new n
+      loadHistory();
+    } catch (e) {
+      alert("Failed to save session: " + e.message);
+    }
+  };
+
+  const loadNewPuzzle = useCallback(async (customN = null) => {
     setLoading(true);
     setError(null);
     setGreedyResult(null);
@@ -129,7 +81,7 @@ export default function MinimumCost({ onBack }) {
     setViewMode(VIEW_USER);
     setShowSteps(null);
     try {
-      const data = await fetchNewRound();
+      const data = await fetchNewRound(customN);
       setRound(data);
       setUserAssignment(Array(data.n).fill(null));
     } catch (e) {
@@ -218,14 +170,28 @@ export default function MinimumCost({ onBack }) {
     setShowSteps(null);
 
     try {
-      // Always solve from scratch — no partial_assignment
-      const result = await solveRound({ n: round.n, cost_matrix: round.cost_matrix, player_name: null });
+      // Pass the current userAssignment to the backend
+      const result = await solveRound({ 
+        n: round.n, 
+        cost_matrix: round.cost_matrix, 
+        partial_assignment: userAssignment.some(t => t !== null) ? userAssignment : null,
+        player_name: null 
+      });
       const g = result.results.find((r) => r.algorithm_name === "Greedy");
       const h = result.results.find((r) => r.algorithm_name === "Hungarian");
+      
       setGreedyResult(g);
       setHungarianResult(h);
-      setAnimAlgo(algoName);
-      setViewMode(algoName === "Greedy" ? VIEW_GREEDY : VIEW_HUNGARIAN);
+      
+      // If user triggered this via manual submit, show "User" result on matrix
+      if (algoName === "User") {
+        setViewMode(VIEW_USER);
+        setAnimAlgo(null);
+        setAnimDone(true);
+      } else {
+        setAnimAlgo(algoName);
+        setViewMode(algoName === "Greedy" ? VIEW_GREEDY : VIEW_HUNGARIAN);
+      }
 
       // Track this round
       setRoundIds((prev) => [...prev, result.round_id]);
@@ -237,7 +203,7 @@ export default function MinimumCost({ onBack }) {
     } finally {
       setLoading(false);
     }
-  }, [round, greedyResult, hungarianResult, loadHistory]);
+  }, [round, greedyResult, hungarianResult, userAssignment, loadHistory]);
 
   const handleAnimDone = () => {
     setAnimDone(true);
@@ -266,9 +232,6 @@ export default function MinimumCost({ onBack }) {
   // The result being animated
   const animResult = animAlgo === "Greedy" ? greedyResult : hungarianResult;
 
-  // Steps log data
-  const stepsLogResult = showSteps === "Greedy" ? greedyResult : hungarianResult;
-
   // Cell class helper
   const cellClass = (emp, task) => {
     const assigned = displayAssignment[emp] === task;
@@ -285,9 +248,7 @@ export default function MinimumCost({ onBack }) {
       {showStartModal && (
         <UserNameModal
           onSubmit={handleStartGameSubmit}
-          roundCount={null}
-          isGameEnd={false}
-          showTaskCount={true}
+          isStart={true}
         />
       )}
 
@@ -295,7 +256,7 @@ export default function MinimumCost({ onBack }) {
         <UserNameModal
           onSubmit={handleEndGameSubmit}
           onPlayAgain={handlePlayAgain}
-          roundCount={roundCount}
+          roundCount={roundCount + (userAssignedCount > 0 && !greedyResult ? 1 : 0)}
           isGameEnd={true}
         />
       )}
@@ -310,19 +271,25 @@ export default function MinimumCost({ onBack }) {
           <button className="btn btn-ghost" onClick={resetAll} disabled={loading || !round} title="Clear all assignments and results">
             ↺ Reset
           </button>
-          <button className="btn btn-primary" onClick={loadNewPuzzle} disabled={loading}>
+          <button className="btn btn-primary" onClick={() => loadNewPuzzle(sessionN)} disabled={loading}>
             {loading ? <><span className={styles.spinner} />Loading…</> : "New Puzzle"}
           </button>
-          {roundCount > 0 && (
+          {roundCount > 0 || userAssignedCount > 0 ? (
             <button
               className="btn btn-success"
-              onClick={() => setShowEndGameModal(true)}
+              onClick={async () => {
+                // If the current round has picks but hasn't been saved, save it now
+                if (userAssignedCount > 0 && !greedyResult) {
+                  await handleSolve("User");
+                }
+                setShowEndGameModal(true);
+              }}
               disabled={loading}
               title="Submit your game session"
             >
-              ✓ Submit Game ({roundCount})
+              ✓ Submit Game ({roundCount + (userAssignedCount > 0 && !greedyResult ? 1 : 0)})
             </button>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -352,13 +319,15 @@ export default function MinimumCost({ onBack }) {
                 </div>
               )}
               {userAssignedCount > 0 && (
-                <button
-                  className={`btn btn-ghost ${styles.smallBtn}`}
-                  onClick={resetUserPicks}
-                  disabled={loading}
-                >
-                  Clear picks
-                </button>
+                <div className={styles.toolbarStatsActions}>
+                  <button
+                    className={`btn btn-ghost ${styles.smallBtn}`}
+                    onClick={resetUserPicks}
+                    disabled={loading}
+                  >
+                    Clear picks
+                  </button>
+                </div>
               )}
             </div>
 
@@ -612,6 +581,50 @@ export default function MinimumCost({ onBack }) {
                         )}
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── History Table ── */}
+          {history.length > 0 && (
+            <div className={`card ${styles.historyCard}`}>
+              <h3>Session History</h3>
+              <div className={styles.historyTableWrap}>
+                <table className={styles.historyTable}>
+                  <thead>
+                    <tr>
+                      <th>Round</th>
+                      <th>Tasks (n)</th>
+                      <th>Player</th>
+                      <th>Your Cost</th>
+                      <th>Optimal Cost</th>
+                      <th>Gap</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...new Set(history.map(h => h.id))].reverse().slice(0, 10).map(roundId => {
+                      const roundRows = history.filter(h => h.id === roundId);
+                      const h = roundRows.find(r => r.algorithm_name === "Hungarian");
+                      const first = roundRows[0];
+                      const userCost = first.user_total_cost;
+                      const optCost = h ? h.total_cost : null;
+                      const gap = userCost !== null && optCost !== null ? userCost - optCost : null;
+
+                      return (
+                        <tr key={roundId}>
+                          <td>#{roundId}</td>
+                          <td>{first.n}</td>
+                          <td>{first.player_name || "—"}</td>
+                          <td className={styles.userCostCell}>${userCost?.toLocaleString() ?? "—"}</td>
+                          <td className={styles.optCostCell}>${optCost?.toLocaleString() ?? "—"}</td>
+                          <td className={gap === 0 ? styles.optMatch : styles.optGap}>
+                            {gap === 0 ? "✅ Optimal" : `+$${gap?.toLocaleString()}`}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

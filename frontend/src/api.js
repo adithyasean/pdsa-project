@@ -1,7 +1,10 @@
 const BASE = "http://localhost:8000/api";
 
-export async function fetchNewRound() {
-  const res = await fetch(`${BASE}/round/new`);
+export async function fetchNewRound(n = null) {
+  const query = new URLSearchParams();
+  if (n) query.append("n", n);
+  query.append("t", Date.now()); // cache buster
+  const res = await fetch(`${BASE}/round/new?${query.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch new round");
   return res.json();
 }

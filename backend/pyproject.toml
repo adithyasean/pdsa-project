@@ -7,6 +7,8 @@ dependencies = [
     "fastapi==0.115.0",
     "uvicorn==0.30.6",
     "pydantic==2.9.2",
+    "playwright>=1.58.0",
+    "pytest-playwright>=0.7.2",
 ]
 
 [dependency-groups]

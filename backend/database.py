@@ -5,13 +5,16 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "game.db")
 
 
 def get_connection():
+    needs_init = not os.path.exists(DB_PATH)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
+    if needs_init:
+        _create_tables(conn)
     return conn
 
 
-def init_db():
-    conn = get_connection()
+def _create_tables(conn):
+    """Create tables and migrate schema. Safe to call multiple times."""
     cursor = conn.cursor()
     cursor.executescript("""
         CREATE TABLE IF NOT EXISTS game_rounds (
@@ -19,6 +22,7 @@ def init_db():
             n               INTEGER NOT NULL,
             player_name     TEXT,
             user_total_cost INTEGER,
+            total_cost      INTEGER,
             created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -31,22 +35,27 @@ def init_db():
         );
     """)
     # Migrate existing databases that lack the new columns
-    for col, definition in [("player_name", "TEXT"), ("user_total_cost", "INTEGER")]:
+    for col, definition in [("player_name", "TEXT"), ("user_total_cost", "INTEGER"), ("total_cost", "INTEGER")]:
         try:
             cursor.execute(f"ALTER TABLE game_rounds ADD COLUMN {col} {definition}")
         except Exception:
             pass
     conn.commit()
+
+
+def init_db():
+    conn = get_connection()
+    _create_tables(conn)
     conn.close()
 
 
-def save_round(n: int, results: list[dict], player_name: str | None = None, user_total_cost: int | None = None) -> int:
+def save_round(n: int, results: list[dict], player_name: str | None = None, user_total_cost: int | None = None, total_cost: int | None = None) -> int:
     """Insert a game round and its algorithm results. Returns round id."""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO game_rounds (n, player_name, user_total_cost) VALUES (?, ?, ?)",
-        (n, player_name, user_total_cost),
+        "INSERT INTO game_rounds (n, player_name, user_total_cost, total_cost) VALUES (?, ?, ?, ?)",
+        (n, player_name, user_total_cost, total_cost),
     )
     round_id = cursor.lastrowid
     cursor.executemany(

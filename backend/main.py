@@ -32,9 +32,13 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 
 @app.get("/api/round/new", response_model=NewRoundResponse)
-def new_round():
-    """Generate a new game round: random N and a random cost matrix."""
-    n = random.randint(50, 100)
+def new_round(n: int | None = None, t: int | None = None):
+    """Generate a new game round: random N (or given n) and a random cost matrix."""
+    if n is None:
+        n = random.randint(50, 100)
+    
+    # Cap n at 500 for safety
+    n = min(max(1, n), 500)
     cost_matrix = [
         [random.randint(20, 200) for _ in range(n)]
         for _ in range(n)
@@ -60,75 +64,77 @@ def solve_round(body: SolveRequest):
     if len(partial) != n:
         raise HTTPException(status_code=400, detail="partial_assignment length must equal n")
 
-    # Build a sub-problem for unassigned employees / tasks
+    # 1. Full Matrix Baselines (Greedy & Hungarian)
+    baselines = []
+    for algo_name, algo_fn in [("Greedy", greedy_assignment), ("Hungarian", hungarian_assignment)]:
+        t0 = time.perf_counter()
+        assignment, cost, steps = algo_fn(matrix)
+        elapsed_ms = (time.perf_counter() - t0) * 1000
+        baselines.append({
+            "name": algo_name,
+            "assignment": assignment,
+            "cost": cost,
+            "time_ms": round(elapsed_ms, 4),
+            "steps": steps
+        })
+
+    # 2. User Result (Partial/Full assignment completed optimally)
+    # Even if partial is empty, we'll treat it as a "User" entry (which would match Hungarian)
     user_assigned_employees = [i for i, t in enumerate(partial) if t is not None]
     user_assigned_tasks = {t for t in partial if t is not None}
     free_employees = [i for i, t in enumerate(partial) if t is None]
     free_tasks = [j for j in range(n) if j not in user_assigned_tasks]
 
-    user_total_cost: int | None = None
+    user_total_cost_calc = 0
     if user_assigned_employees:
-        user_total_cost = sum(matrix[i][partial[i]] for i in user_assigned_employees)
+        user_total_cost_calc = sum(matrix[i][partial[i]] for i in user_assigned_employees)
 
-    results = []
-    for algo_name, algo_fn in [("Greedy", greedy_assignment), ("Hungarian", hungarian_assignment)]:
-        if free_employees:
-            sub_matrix = [[matrix[i][j] for j in free_tasks] for i in free_employees]
-            t0 = time.perf_counter()
-            sub_assignment, _, sub_steps = algo_fn(sub_matrix)
-            elapsed_ms = (time.perf_counter() - t0) * 1000
+    full_user_assignment = list(partial)
+    user_steps = [] # could populate if we want, but usually not needed for "User"
+    
+    if free_employees:
+        sub_matrix = [[matrix[i][j] for j in free_tasks] for i in free_employees]
+        # Complete optimally for the "User" entry
+        sub_assignment, sub_cost, _ = hungarian_assignment(sub_matrix)
+        user_total_cost_calc += sub_cost
+        for idx, emp in enumerate(free_employees):
+            full_user_assignment[emp] = free_tasks[sub_assignment[idx]]
 
-            # Map sub-problem indices back to original
-            full_assignment = list(partial)
-            for idx, emp in enumerate(free_employees):
-                full_assignment[emp] = free_tasks[sub_assignment[idx]]
+    user_result = AlgorithmResult(
+        algorithm_name="User",
+        assignment=full_user_assignment,
+        total_cost=user_total_cost_calc,
+        time_ms=0.0, # Manual effort
+        steps=[]
+    )
 
-            # Map steps back to original employee/task indices
-            user_cost = user_total_cost or 0
-            steps = []
-            for step in sub_steps:
-                real_emp  = free_employees[step["employee"]]
-                real_task = free_tasks[step["task"]]
-                steps.append({
-                    "employee": real_emp,
-                    "task": real_task,
-                    "cost": step["cost"],
-                    "running_total": user_cost + step["running_total"],
-                    "candidates": [
-                        [free_tasks[c[0]], c[1]] for c in step["candidates"]
-                    ],
-                })
-        else:
-            # Entire matrix already assigned by user — just time a trivial call
-            t0 = time.perf_counter()
-            algo_fn([[matrix[i][i] for i in range(1)]])   # minimal call to get a non-zero time
-            elapsed_ms = (time.perf_counter() - t0) * 1000
-            full_assignment = list(partial)
-            steps = []
+    # 3. Combine and Save
+    all_results = [user_result] + [
+        AlgorithmResult(
+            algorithm_name=b["name"],
+            assignment=b["assignment"],
+            total_cost=b["cost"],
+            time_ms=b["time_ms"],
+            steps=b["steps"]
+        ) for b in baselines
+    ]
 
-        total_cost = sum(matrix[i][full_assignment[i]] for i in range(n))
-        results.append(
-            AlgorithmResult(
-                algorithm_name=algo_name,
-                assignment=full_assignment,
-                total_cost=total_cost,
-                time_ms=round(elapsed_ms, 4),
-                steps=steps,
-            )
-        )
+    # Find the best (Hungarian) cost to save as total_cost
+    hungarian_cost = next((r.total_cost for r in all_results if r.algorithm_name == "Hungarian"), user_total_cost_calc)
 
     round_id = save_round(
         n,
-        [{"algorithm_name": r.algorithm_name, "total_cost": r.total_cost, "time_ms": r.time_ms} for r in results],
+        [{"algorithm_name": r.algorithm_name, "total_cost": r.total_cost, "time_ms": r.time_ms} for r in all_results],
         player_name=body.player_name or None,
-        user_total_cost=user_total_cost,
+        user_total_cost=user_total_cost_calc,
+        total_cost=hungarian_cost
     )
 
     return SolveResponse(
         round_id=round_id,
         n=n,
-        user_total_cost=user_total_cost,
-        results=results,
+        user_total_cost=user_total_cost_calc,
+        results=all_results,
     )
 
 
