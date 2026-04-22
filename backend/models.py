@@ -49,3 +49,8 @@ class RoundHistoryItem(BaseModel):
     algorithm_name: str
     total_cost: int
     time_ms: float
+
+
+class UpdatePlayerNameRequest(BaseModel):
+    round_ids: list[int]
+    player_name: str

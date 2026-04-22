@@ -21,3 +21,13 @@ export async function fetchHistory() {
   if (!res.ok) throw new Error("Failed to fetch history");
   return res.json();
 }
+
+export async function updatePlayerName(roundIds, playerName) {
+  const res = await fetch(`${BASE}/rounds/update-player-name`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ round_ids: roundIds, player_name: playerName }),
+  });
+  if (!res.ok) throw new Error("Failed to update player name");
+  return res.json();
+}

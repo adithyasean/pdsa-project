@@ -78,3 +78,18 @@ def get_all_rounds() -> list[dict]:
     rows = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return rows
+
+
+def update_player_name(round_ids: list[int], player_name: str) -> None:
+    """Update player_name for multiple rounds."""
+    if not round_ids:
+        return
+    conn = get_connection()
+    cursor = conn.cursor()
+    placeholders = ','.join('?' * len(round_ids))
+    cursor.execute(
+        f"UPDATE game_rounds SET player_name = ? WHERE id IN ({placeholders})",
+        [player_name] + round_ids,
+    )
+    conn.commit()
+    conn.close()

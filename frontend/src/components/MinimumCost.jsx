@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { fetchNewRound, solveRound, fetchHistory } from "../api";
+import { fetchNewRound, solveRound, fetchHistory, updatePlayerName } from "../api";
 import TimingChart from "./TimingChart";
 import AlgoAnimation from "./AlgoAnimation";
+import UserNameModal from "./UserNameModal";
 import styles from "./MinimumCost.module.css";
 
 const ANIM_SPEED = 120;
@@ -24,11 +25,99 @@ export default function MinimumCost({ onBack }) {
   const [loading, setLoading]         = useState(false);
   const [error, setError]             = useState(null);
   const [showSteps, setShowSteps]     = useState(null); // "Greedy"|"Hungarian"|null — steps log
-  const [playerName, setPlayerName]   = useState("");
+  const [roundIds, setRoundIds]       = useState([]); // Track round IDs for game session
+  const [roundCount, setRoundCount]   = useState(0); // Track number of rounds played
+  const [showEndGameModal, setShowEndGameModal] = useState(false); // Show end-game modal
+  const [showStartModal, setShowStartModal] = useState(true); // Show start modal to ask for username
+  const [playerName, setPlayerName]   = useState(null); // Store player name for the session
 
   const loadHistory = useCallback(async () => {
     try { setHistory(await fetchHistory()); } catch { /* silent */ }
   }, []);
+
+  const handleStartGameSubmit = useCallback(async (name, customN) => {
+    setPlayerName(name);
+    setShowStartModal(false);
+    // Now load the first puzzle (with custom N if provided)
+    try {
+      let data = await fetchNewRound();
+      if (customN) {
+        data.n = customN;
+        data.cost_matrix = Array(customN)
+          .fill(null)
+          .map(() => Array(customN).fill(null).map(() => Math.floor(Math.random() * 180) + 20));
+      }
+      setRound(data);
+      setUserAssignment(Array(data.n).fill(null));
+    } catch (e) {
+      setError(e.message);
+    }
+    await loadHistory();
+  }, [loadHistory]);
+
+  const handleEndGameSubmit = useCallback(async (name) => {
+    // Update player name
+    setPlayerName(name);
+    // Update all rounds with the player name
+    if (roundIds.length > 0) {
+      try {
+        await updatePlayerName(roundIds, name);
+        await loadHistory();
+      } catch (e) {
+        setError(e.message);
+        return;
+      }
+    }
+    // Reset and go back to menu
+    setShowEndGameModal(false);
+    setRoundIds([]);
+    setRoundCount(0);
+    setShowStartModal(true); // Show start modal again for new game
+    onBack();
+  }, [roundIds, loadHistory, onBack]);
+
+  const handlePlayAgain = useCallback(async (name, customN) => {
+    // Update player name
+    setPlayerName(name);
+    // Update all rounds with the player name
+    if (roundIds.length > 0) {
+      try {
+        await updatePlayerName(roundIds, name);
+        await loadHistory();
+      } catch (e) {
+        setError(e.message);
+        return;
+      }
+    }
+    // Reset for new game
+    setShowEndGameModal(false);
+    setRoundIds([]);
+    setRoundCount(0);
+    // Reset and load a new puzzle
+    setRound(null);
+    setUserAssignment([]);
+    setGreedyResult(null);
+    setHungarianResult(null);
+    setAnimAlgo(null);
+    setAnimDone(false);
+    setViewMode(VIEW_USER);
+    setShowSteps(null);
+
+    // Load new puzzle (with custom N if provided)
+    try {
+      let data = await fetchNewRound();
+      if (customN) {
+        data.n = customN;
+        data.cost_matrix = Array(customN)
+          .fill(null)
+          .map(() => Array(customN).fill(null).map(() => Math.floor(Math.random() * 180) + 20));
+      }
+      setRound(data);
+      setUserAssignment(Array(data.n).fill(null));
+    } catch (e) {
+      setError(e.message);
+    }
+  }, [roundIds, loadHistory]);
 
   const loadNewPuzzle = useCallback(async () => {
     setLoading(true);
@@ -50,10 +139,29 @@ export default function MinimumCost({ onBack }) {
     }
   }, []);
 
+  const handleMenuClick = useCallback(() => {
+    // If user hasn't played any rounds, just go back
+    if (roundCount === 0) {
+      onBack();
+      return;
+    }
+    // If they have rounds, ask if they want to submit
+    const confirmed = window.confirm(
+      `You've played ${roundCount} round(s). Do you want to submit your score before leaving?`
+    );
+    if (confirmed) {
+      setShowEndGameModal(true);
+    } else {
+      // Reset and go back
+      setRoundIds([]);
+      setRoundCount(0);
+      onBack();
+    }
+  }, [roundCount, onBack]);
+
   useEffect(() => {
-    loadNewPuzzle();
     loadHistory();
-  }, [loadNewPuzzle, loadHistory]);
+  }, [loadHistory]);
 
   // Clear user's manual picks but keep same puzzle & algo results
   const resetUserPicks = () => {
@@ -111,13 +219,18 @@ export default function MinimumCost({ onBack }) {
 
     try {
       // Always solve from scratch — no partial_assignment
-      const result = await solveRound({ n: round.n, cost_matrix: round.cost_matrix, player_name: playerName.trim() || null });
+      const result = await solveRound({ n: round.n, cost_matrix: round.cost_matrix, player_name: null });
       const g = result.results.find((r) => r.algorithm_name === "Greedy");
       const h = result.results.find((r) => r.algorithm_name === "Hungarian");
       setGreedyResult(g);
       setHungarianResult(h);
       setAnimAlgo(algoName);
       setViewMode(algoName === "Greedy" ? VIEW_GREEDY : VIEW_HUNGARIAN);
+
+      // Track this round
+      setRoundIds((prev) => [...prev, result.round_id]);
+      setRoundCount((prev) => prev + 1);
+
       await loadHistory();
     } catch (e) {
       setError(e.message);
@@ -169,18 +282,47 @@ export default function MinimumCost({ onBack }) {
 
   return (
     <div className={styles.page}>
+      {showStartModal && (
+        <UserNameModal
+          onSubmit={handleStartGameSubmit}
+          roundCount={null}
+          isGameEnd={false}
+          showTaskCount={true}
+        />
+      )}
+
+      {showEndGameModal && (
+        <UserNameModal
+          onSubmit={handleEndGameSubmit}
+          onPlayAgain={handlePlayAgain}
+          roundCount={roundCount}
+          isGameEnd={true}
+        />
+      )}
+
       {/* ── Header ── */}
       <div className={styles.header}>
-        <button className="btn btn-ghost" onClick={onBack}>← Menu</button>
+        <button className="btn btn-ghost" onClick={handleMenuClick}>← Menu</button>
         <h1>Minimum Cost Assignment</h1>
         <div className={styles.headerActions}>
           {round && <span className={styles.matrixBadge}>{round.n} × {round.n}</span>}
+          {roundCount > 0 && <span className={styles.roundBadge}>Rounds: {roundCount}</span>}
           <button className="btn btn-ghost" onClick={resetAll} disabled={loading || !round} title="Clear all assignments and results">
             ↺ Reset
           </button>
           <button className="btn btn-primary" onClick={loadNewPuzzle} disabled={loading}>
             {loading ? <><span className={styles.spinner} />Loading…</> : "New Puzzle"}
           </button>
+          {roundCount > 0 && (
+            <button
+              className="btn btn-success"
+              onClick={() => setShowEndGameModal(true)}
+              disabled={loading}
+              title="Submit your game session"
+            >
+              ✓ Submit Game ({roundCount})
+            </button>
+          )}
         </div>
       </div>
 
@@ -197,20 +339,6 @@ export default function MinimumCost({ onBack }) {
         <>
           {/* ── Toolbar ── */}
           <div className={styles.toolbar}>
-            {/* Player name */}
-            <div className={styles.playerNameWrap}>
-              <label htmlFor="playerName" className={styles.playerNameLabel}>Player</label>
-              <input
-                id="playerName"
-                type="text"
-                className={styles.playerNameInput}
-                placeholder="Enter your name…"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                maxLength={50}
-              />
-            </div>
-
             {/* Left: user stats */}
             <div className={styles.toolbarStats}>
               <div className={styles.statPill}>
@@ -381,7 +509,7 @@ export default function MinimumCost({ onBack }) {
                 {userTotal !== null && (
                   <div className={`${styles.compCard} ${styles.compUser}`}>
                     <span className={styles.compIcon}>🧠</span>
-                    <span className={styles.compLabel}>{playerName.trim() || "Your picks"}</span>
+                    <span className={styles.compLabel}>Your picks</span>
                     <span className={styles.compCost}>${userTotal.toLocaleString()}</span>
                     <span className={styles.compSub}>{userAssignedCount}/{round.n} assigned</span>
                   </div>

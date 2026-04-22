@@ -5,8 +5,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from database import init_db, save_round, get_all_rounds
-from models import NewRoundResponse, SolveRequest, SolveResponse, AlgorithmResult, RoundHistoryItem
+from database import init_db, save_round, get_all_rounds, update_player_name
+from models import NewRoundResponse, SolveRequest, SolveResponse, AlgorithmResult, RoundHistoryItem, UpdatePlayerNameRequest
 from algorithms.greedy import greedy_assignment
 from algorithms.hungarian import hungarian_assignment
 
@@ -135,6 +135,18 @@ def solve_round(body: SolveRequest):
 @app.get("/api/rounds", response_model=list[RoundHistoryItem])
 def rounds_history():
     return get_all_rounds()
+
+
+@app.post("/api/rounds/update-player-name")
+def update_rounds_player_name(body: UpdatePlayerNameRequest):
+    """Update player_name for a list of rounds (used when game ends)."""
+    if not body.round_ids:
+        raise HTTPException(status_code=400, detail="round_ids cannot be empty")
+    if not body.player_name or not body.player_name.strip():
+        raise HTTPException(status_code=400, detail="player_name cannot be empty")
+
+    update_player_name(body.round_ids, body.player_name.strip())
+    return {"status": "ok", "updated_rounds": len(body.round_ids)}
 
 
 if __name__ == "__main__":
